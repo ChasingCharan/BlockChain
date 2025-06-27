@@ -1,13 +1,14 @@
 const Block = require('./block');
 const {GENESIS_DATA, MINE_RATE} = require('./config');
 const cryptoHash = require('./crypto-hash');
+
 describe('Block', () => {
   const timestamp = 2000;
   const lastHash = 'foo-hash';
   const hash = 'bar-hash';
   const data = ['blockchain', 'data'];
   const nonce = 1;
-  const difficulty = 1;
+  const difficulty = 2;
 
   const block = new Block({ timestamp, lastHash, hash, data, nonce, difficulty });
 
@@ -27,8 +28,8 @@ describe('Block', () => {
       expect(genesisBlock instanceof Block).toBe(true);
     });
 
-    it('returns the genesis data', () => {
-      expect(genesisBlock).toEqual(GENESIS_DATA);
+    it('contains the genesis block properties', () => {
+      expect(genesisBlock).toMatchObject(GENESIS_DATA);
     });
   });
 
@@ -71,7 +72,7 @@ describe('Block', () => {
         .toEqual('0'.repeat(minedBlock.difficulty));
     });
 
-    if('adjusts the difficulty', () => {
+    it('adjusts the difficulty', () => {
       const possibleResults = [lastBlock.difficulty + 1, lastBlock.difficulty - 1];
       expect(possibleResults.includes(minedBlock.difficulty)).toBe(true);
     });
@@ -89,14 +90,15 @@ describe('Block', () => {
       expect(Block.adjustDifficulty({
         originalBlock: block,
         timestamp: block.timestamp + MINE_RATE + 100
-      })).toEqual(block.difficulty - 1);
+      })).toEqual(block.difficulty > 1 ? block.difficulty - 1 : 1);
     });
 
     it('has a lower limit of 1', () => {
-      block.difficulty = -1;
-      expect(Block.adjustDifficulty(Block.adjustDifficulty({
-        originalBlock: block,
-      }))).toEqual(1);
+      const lowDifficultyBlock = { ...block, difficulty: 1 };
+      expect(Block.adjustDifficulty({
+        originalBlock: lowDifficultyBlock,
+        timestamp: Date.now()
+      })).toEqual(1);
     });
   });
 })

@@ -8,6 +8,7 @@ class Block {
     this.hash = hash;
     this.data =  data;
     this.nonce = nonce;
+    this.difficulty = difficulty;
   }
 
   static genesis(){
@@ -38,18 +39,17 @@ class Block {
     });
   }
 
-  static adjustDifficulty({originalBlock, timestamp}) {
+  static adjustDifficulty({ originalBlock, timestamp }) {
     const { difficulty } = originalBlock;
 
-    if (difficulty < 1) {
-      return 1;
-    }
+    if (difficulty < 1) return 1;
 
-    if(( difficulty - originalBlock.timestamp)> MINE_RATE) {
-      return difficulty - 1;
+    if ((timestamp - originalBlock.timestamp) > MINE_RATE) {
+        return difficulty - 1;
     }
     return difficulty + 1;
-  }
+}
+
 
 }
 module.exports = Block;
