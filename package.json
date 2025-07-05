@@ -11,5 +11,8 @@
   "description": "",
   "devDependencies": {
     "jest": "^30.0.3"
+  },
+  "dependencies": {
+    "hex-to-binary": "^1.0.1"
   }
 }
