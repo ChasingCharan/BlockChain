@@ -16,14 +16,19 @@
   "devDependencies": {
     "jest": "^30.0.3"
   },
+  "jest": {
+    "testEnvironment": "node"
+  },
   "dependencies": {
     "body-parser": "^2.2.0",
     "cross-env": "^7.0.3",
+    "elliptic": "^6.6.1",
     "express": "^5.1.0",
     "hex-to-binary": "^1.0.1",
     "nodemon": "^3.1.10",
     "pubnub": "^9.7.0",
     "redis": "^5.5.6",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "uuid": "^11.1.0"
   }
 }
