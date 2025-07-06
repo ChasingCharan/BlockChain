@@ -2,12 +2,15 @@ const redis = require('redis');
 
 const CHANNELS = {
   TEST: 'TEST',
-  BLOCKCHAIN: 'BLOCKCHAIN'
+  BLOCKCHAIN: 'BLOCKCHAIN',
+  TRANSACTION: 'TRANSACTION'
 };
 
 class PubSub {
-  constructor({ blockchain }) {
+  constructor({ blockchain, transactionPool,wallet }) {
     this.blockchain = blockchain;
+    this.transactionPool = transactionPool;
+    this.wallet = wallet;
 
     this.publisher = redis.createClient();
     this.subscriber = redis.createClient();
@@ -38,8 +41,22 @@ class PubSub {
       return;
     }
 
-    if (channel === CHANNELS.BLOCKCHAIN) {
-      this.blockchain.replaceChain(parsedMessage);
+    switch(channel) {
+        case CHANNELS.BLOCKCHAIN:
+          this.blockchain.replaceChain(parsedMessage);
+          break;
+        case CHANNELS.TRANSACTION:
+          this.transactionPool.setTransaction(parsedMessage);
+          break;
+        case CHANNELS.TRANSACTION:
+          if (!this.transactionPool.existingTransaction({
+            inputAddress: this.wallet.publicKey
+          })) {
+            this.transactionPool.setTransaction(parsedMessage);
+          }
+          break;
+        default:
+          return;
     }
   }
 
@@ -54,15 +71,15 @@ class PubSub {
             console.error(`❌ Failed to subscribe to ${channel}:`, err);
         }
     }
-}
+  }
 
 
   async publish({ channel, message }) {
-
     try {
         await this.subscriber.unsubscribe(channel);
         console.log(`✅ Unsubscribed from ${channel} before publishing`);
         const msg = typeof message === 'string' ? message : JSON.stringify(message);
+        console.log(`📦 Publishing to ${channel}: ${msg}`);
         const count = await this.publisher.publish(channel, msg);
         console.log(`✅ Message published to ${channel}. Subscriber count: ${count}`);
         await this.subscriber.subscribe(channel, (message, channelName) => {
@@ -77,7 +94,13 @@ class PubSub {
   broadcastChain() {
     this.publish({
       channel: CHANNELS.BLOCKCHAIN,
-      message: this.blockchain.chain
+      message: JSON.stringify(this.blockchain.chain)
+    });
+  }
+  broadcastTransaction(transaction) {
+    this.publish({
+      channel: CHANNELS.TRANSACTION,
+      message: JSON.stringify(transaction)
     });
   }
 }
